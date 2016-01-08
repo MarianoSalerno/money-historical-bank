@@ -139,23 +139,22 @@ class Money
         return from if same_currency?(from.currency, to_currency)
 
         rate = get_rate(date, from.currency, to_currency)
+
         unless rate
           raise UnknownRate, "No conversion rate available for #{date} '#{from.currency.iso_code}' -> '#{to_currency}'"
         end
         _to_currency_  = Currency.wrap(to_currency)
 
         cents = BigDecimal.new(from.cents.to_s) / (BigDecimal.new(from.currency.subunit_to_unit.to_s) / BigDecimal.new(_to_currency_.subunit_to_unit.to_s))
-
         ex = cents * BigDecimal.new(rate.to_s)
-
         ex = if block_given?
                yield ex
              elsif @rounding_method
                @rounding_method.call(ex)
              else
-               ex
+               ex.to_s.to_i
              end
-        Money.new(ex, _to_currency_)
+        Money.new(ex * 100, _to_currency_)
       end
 
       # Return the known rates as a string in the format specified. If +file+
